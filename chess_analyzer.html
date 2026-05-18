@@ -181,6 +181,26 @@ padding:8px 14px;font-size:12px;color:#c084fc;display:flex;align-items:center;ga
 #moveBadge.badge-inaccuracy{background:#f59e0b;color:#fff;border:1.5px solid rgba(255,255,255,0.3);}
 #moveBadge.badge-mistake{background:#f97316;color:#fff;border:1.5px solid rgba(255,255,255,0.3);}
 #moveBadge.badge-blunder{background:#ef4444;color:#fff;border:1.5px solid rgba(255,255,255,0.3);}
+
+/* ═══ CHESS CLOCK ═══ */
+.clock-wrap{display:flex;gap:8px;align-items:center;width:480px;justify-content:center;flex-wrap:wrap;}
+.clock-card{flex:1;min-width:120px;background:var(--bg3);border:2px solid var(--border);
+  border-radius:8px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:border-color 0.2s,background 0.2s;}
+.clock-card.active{border-color:var(--accent);background:rgba(99,102,241,0.1);}
+.clock-card.low{border-color:var(--blunder)!important;background:rgba(239,68,68,0.1)!important;}
+.clock-card.flagged{border-color:var(--blunder)!important;background:rgba(239,68,68,0.25)!important;}
+.clock-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);}
+.clock-time{font-size:26px;font-weight:800;font-family:monospace;letter-spacing:1px;color:var(--text);}
+.clock-card.active .clock-time{color:var(--accent2);}
+.clock-card.low .clock-time,.clock-card.flagged .clock-time{color:var(--blunder);}
+.clock-controls{display:flex;gap:6px;align-items:center;width:480px;flex-wrap:wrap;}
+.tc-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.tc-btn:hover{border-color:var(--accent);color:var(--text);}
+.tc-btn.sel{background:var(--accent);border-color:var(--accent);color:#fff;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.clock-card.flagged .clock-time{animation:blink 0.7s infinite;}
 /* Spinner */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);
@@ -454,6 +474,25 @@ border-top-color:var(--accent2);border-radius:50%;animation:spin 0.8s linear inf
         <div class="captured-wrap" id="manualCapturedBot"></div>
       </div>
       <div class="game-status" id="manualStatus">White to move</div>
+      <!-- Clock -->
+      <div class="clock-controls" id="manualClockControls">
+        <span style="font-size:11px;color:var(--text3);font-weight:600;">Timer:</span>
+        <button class="tc-btn" onclick="manualSetTC(0)">Off</button>
+        <button class="tc-btn sel" id="manualTcBtn1" onclick="manualSetTC(180)">3 min</button>
+        <button class="tc-btn" id="manualTcBtn2" onclick="manualSetTC(300)">5 min</button>
+        <button class="tc-btn" id="manualTcBtn3" onclick="manualSetTC(600)">10 min</button>
+        <button class="tc-btn" id="manualTcBtn4" onclick="manualSetTC(1800)">30 min</button>
+      </div>
+      <div class="clock-wrap" id="manualClockWrap">
+        <div class="clock-card" id="manualClockBlack">
+          <span class="clock-label">Black</span>
+          <span class="clock-time" id="manualTimeBlack">3:00</span>
+        </div>
+        <div class="clock-card active" id="manualClockWhite">
+          <span class="clock-label">White</span>
+          <span class="clock-time" id="manualTimeWhite">3:00</span>
+        </div>
+      </div>
       <div class="board-controls" style="width:480px;">
         <button class="btn btn-icon" onclick="manualGoTo(0)" title="Start">⏮</button>
         <button class="btn btn-icon" onclick="manualStepBy(-1)" title="Prev">◀</button>
@@ -528,6 +567,17 @@ border-top-color:var(--accent2);border-radius:50%;animation:spin 0.8s linear inf
         <div class="captured-wrap" id="compCapturedBot"></div>
       </div>
       <div class="game-status white-turn" id="compStatus">Set up your game →</div>
+      <!-- Clock -->
+      <div class="clock-wrap" id="compClockWrap" style="display:none;">
+        <div class="clock-card" id="compClockTop">
+          <span class="clock-label" id="compClockTopLabel">Computer</span>
+          <span class="clock-time" id="compTimeTop">—</span>
+        </div>
+        <div class="clock-card active" id="compClockBot">
+          <span class="clock-label" id="compClockBotLabel">You</span>
+          <span class="clock-time" id="compTimeBot">—</span>
+        </div>
+      </div>
       <div class="board-controls" style="width:480px;">
         <button class="btn btn-icon" onclick="compFlipBoard()" title="Flip">⇅</button>
         <button class="btn danger" onclick="compNewGame()">↺ New Game</button>
@@ -567,6 +617,15 @@ border-top-color:var(--accent2);border-radius:50%;animation:spin 0.8s linear inf
           style="width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);
           padding:6px 10px;border-radius:6px;font-size:13px;margin-bottom:12px;"
           placeholder="Enter your name">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Time control:</div>
+        <div class="diff-row" id="compTcRow">
+          <button class="tc-btn" onclick="compSetTC(0)">No timer</button>
+          <button class="tc-btn sel" onclick="compSetTC(180)">3 min</button>
+          <button class="tc-btn" onclick="compSetTC(300)">5 min</button>
+          <button class="tc-btn" onclick="compSetTC(600)">10 min</button>
+          <button class="tc-btn" onclick="compSetTC(1800)">30 min</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">Per player. Computer moves instantly, its clock still runs.</div>
         <button class="btn primary" style="width:100%;" onclick="compStartGame()">▶ Start Game</button>
       </div>
       <div class="play-section">
@@ -1672,27 +1731,31 @@ async function runEngineAnalysis() {
       const result = await evalFen(sf, fen, engineDepth);
 
       const mv = curGame.moves[i];
-      // Score from moving side's perspective
+
+      // Stockfish score is always from the side-to-move's perspective.
+      // Convert to white-relative centipawns: positive = good for White.
       const sideMultiplier = mv.color === 'w' ? 1 : -1;
-      const evalCp = result.score * sideMultiplier;
+      const evalCpWhiteRelative = result.score * sideMultiplier;
 
-      // Get prev eval (from opponent's perspective, so flip)
-      const prevEvalCp = i === 0 ? 0 : (() => {
-        const prevMv = curGame.moves[i - 1];
-        return typeof prevMv._engine_cp !== 'undefined' ? prevMv._engine_cp : 0;
-      })();
-
-      mv._engine_cp = evalCp;
-
-      // Store real centipawn score (white-relative)
-      const evalPawns = (evalCp * sideMultiplier) / 100;
+      // Store white-relative score for eval bar / chart
+      mv._engine_cp = evalCpWhiteRelative;
+      const evalPawns = evalCpWhiteRelative / 100;
       curGame.evals[i + 1] = parseFloat(evalPawns.toFixed(2));
       mv.eval = parseFloat(evalPawns.toFixed(2));
 
-      // cp drop = how much worse than the previous best
-      // prev best was "result of best move from that position"
-      // We use the score delta for classification
-      const cpDrop = Math.max(0, prevEvalCp - evalCp);
+      // cp drop for classification:
+      // The position BEFORE this move was evaluated from the opponent's view.
+      // prevEvalCp is white-relative from the previous fen evaluation.
+      // The "expected" score for the current side = -prevEvalCp (flipped to current side's view).
+      // Drop = expected - actual (both in current side's cp, i.e. positive = good for current side).
+      let cpDrop = 0;
+      if (i > 0) {
+        const prevWhiteCp = curGame.moves[i - 1]._engine_cp; // white-relative from prev position
+        // From current side's perspective: expected = prevWhiteCp * sideMultiplier (flip if Black)
+        const expectedCp = prevWhiteCp * sideMultiplier;
+        const actualCp   = result.score; // Stockfish: side-to-move perspective (same as expected axis)
+        cpDrop = Math.max(0, expectedCp - actualCp);
+      }
       mv.classification = i === 0 ? 'ok' : classifyFromCpDrop(cpDrop);
 
       // Best move
@@ -2213,6 +2276,10 @@ function initManualMode() {
   manualLastFrom = null;
   manualLastTo = null;
   renderPlayCoords('manualCoordRank','manualCoordFile', manualFlipped);
+  // Init clock with default TC
+  if (manualClockEnabled) manualInitClock(manualClockTC);
+  const wrap = document.getElementById('manualClockWrap');
+  if (wrap) wrap.style.display = manualClockEnabled ? 'flex' : 'none';
   manualRenderFull();
 }
 
@@ -2310,7 +2377,10 @@ function manualSquareClick(alg, sqEl) {
       manualLastTo = move.to;
       manualSelectedSq = null;
       manualLegalTargets = [];
+      manualClockOnMove(move.color);
       manualRenderFull();
+      const manOverMsg = gameOverMessage(manualChess);
+      if (manOverMsg) manualClockOnGameOver();
       return;
     }
     // Not a valid move to this sq — try selecting as new piece
@@ -2369,6 +2439,7 @@ function manualFlipBoard() {
 }
 
 function manualNewGame() {
+  if (manualClock) { manualClock.stop(); manualClock = null; }
   manualChess = new Chess();
   manualHistory = [];
   manualViewIdx = -1;
@@ -2377,6 +2448,7 @@ function manualNewGame() {
   manualLastFrom = null;
   manualLastTo = null;
   updatePlayEvalBar('manualEvalWhite','manualEvalBlack','manualEvalLabel', 0);
+  if (manualClockEnabled) manualInitClock(manualClockTC);
   manualRenderFull();
 }
 
@@ -2465,6 +2537,7 @@ function compStartGame() {
   document.getElementById('compTopName').textContent = `Computer (${color === 'w' ? 'Black' : 'White'})`;
   document.getElementById('compTopDot').style.background = color === 'w' ? 'var(--black-col)' : 'var(--white-col)';
   document.getElementById('compSetup').style.display = 'none';
+  compInitClock();
   compRenderFull();
   // If computer plays first (player chose black), make engine move
   if (compPlayerColor === 'b') compEngineMove();
@@ -2552,9 +2625,11 @@ function compSquareClick(alg, sqEl) {
       compSelectedSq = null;
       compLegalTargets = [];
       document.getElementById('compLastMove').textContent = move.san;
+      compClockOnPlayerMove();
       compRenderFull();
       const over2 = gameOverMessage(compChess);
-      if (!over2) compEngineMove();
+      if (over2) { compClockOnGameOver(); }
+      else { if (!compClock || !compClock.flagged) compEngineMove(); }
       return;
     }
     compSelectedSq = null;
@@ -2603,6 +2678,7 @@ async function compEngineMove() {
     document.getElementById('compThinkInfo').textContent = 'Engine error: ' + e.message;
   }
   compEngineThinking = false;
+  compClockOnEngineMove();
   compRenderFull();
 }
 
@@ -2623,6 +2699,7 @@ function compFlipBoard() {
 }
 
 function compNewGame() {
+  if (compClock) { compClock.stop(); compClock = null; }
   compGameStarted = false;
   compChess = new Chess();
   compHistory = [];
@@ -2635,6 +2712,8 @@ function compNewGame() {
   compFlipped = false;
   renderPlayCoords('compCoordRank','compCoordFile', compFlipped);
   document.getElementById('compSetup').style.display = 'block';
+  const cWrap = document.getElementById('compClockWrap');
+  if (cWrap) cWrap.style.display = 'none';
   document.getElementById('compLastMove').textContent = '—';
   document.getElementById('compThinkInfo').textContent = '';
   updatePlayEvalBar('compEvalWhite','compEvalBlack','compEvalLabel', 0);
@@ -2655,6 +2734,8 @@ function compUndo() {
     compLastFrom = last.from;
     compLastTo = last.to;
   }
+  // Pause clock on undo
+  if (compClock) compClock.pause();
   compRenderFull();
 }
 
@@ -2689,12 +2770,275 @@ function compSendToAnalyzer() {
 }
 
 
+
+// ═══════════════════════════════════════════════
+//  SHARED CLOCK ENGINE
+// ═══════════════════════════════════════════════
+function fmtTime(secs) {
+  if (secs < 0) secs = 0;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+// Generic clock: manages two countdowns (white/black) and fires onFlag(color) when either hits 0.
+function createClock(initialSecs, onTick, onFlag) {
+  let times = { w: initialSecs, b: initialSecs };
+  let active = null;        // 'w' | 'b' | null
+  let interval = null;
+  let running = false;
+  let flagged = false;
+
+  function tick() {
+    if (!active || flagged) return;
+    times[active] = Math.max(0, times[active] - 1);
+    onTick(times, active);
+    if (times[active] === 0) {
+      flagged = true;
+      clearInterval(interval);
+      interval = null;
+      running = false;
+      onFlag(active);
+    }
+  }
+
+  return {
+    start(side) {
+      active = side;
+      running = true;
+      if (!interval) interval = setInterval(tick, 1000);
+      onTick(times, active);
+    },
+    switch(toSide) {
+      active = toSide;
+      onTick(times, active);
+    },
+    pause() {
+      running = false;
+      clearInterval(interval);
+      interval = null;
+    },
+    resume() {
+      if (!running && !flagged && active) {
+        running = true;
+        interval = setInterval(tick, 1000);
+      }
+    },
+    reset(secs) {
+      clearInterval(interval);
+      interval = null;
+      running = false;
+      flagged = false;
+      active = null;
+      times = { w: secs, b: secs };
+      onTick(times, null);
+    },
+    stop() {
+      clearInterval(interval);
+      interval = null;
+      running = false;
+      active = null;
+    },
+    get times() { return times; },
+    get active() { return active; },
+    get flagged() { return flagged; }
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  MANUAL PLAY CLOCK
+// ═══════════════════════════════════════════════
+let manualClockTC = 180; // seconds per side (0 = off)
+let manualClock = null;
+let manualClockEnabled = false;
+
+function manualSetTC(secs) {
+  manualClockTC = secs;
+  manualClockEnabled = secs > 0;
+  // Update button highlight
+  const btns = document.querySelectorAll('#manualClockControls .tc-btn');
+  const labels = [0, 180, 300, 600, 1800];
+  btns.forEach((b, i) => b.classList.toggle('sel', labels[i] === secs));
+  // Show/hide clock
+  const wrap = document.getElementById('manualClockWrap');
+  if (wrap) wrap.style.display = secs > 0 ? 'flex' : 'none';
+  // Reset clock to new TC
+  if (manualClock) { manualClock.stop(); manualClock = null; }
+  if (secs > 0) {
+    manualInitClock(secs);
+    // Reset timer display even if game is in progress
+    manualRenderClocks({ w: secs, b: secs }, null);
+  }
+}
+
+function manualInitClock(secs) {
+  manualClock = createClock(secs,
+    (times, active) => manualRenderClocks(times, active),
+    (flaggedColor) => {
+      const winner = flaggedColor === 'w' ? 'Black' : 'White';
+      const el = document.getElementById('manualStatus');
+      el.textContent = `⏱ Time — ${winner} wins on time!`;
+      el.className = 'game-status game-over';
+      manualClockRenderFlagged(flaggedColor);
+    }
+  );
+  manualRenderClocks({ w: secs, b: secs }, null);
+}
+
+function manualRenderClocks(times, active) {
+  const wEl = document.getElementById('manualTimeWhite');
+  const bEl = document.getElementById('manualTimeBlack');
+  const wCard = document.getElementById('manualClockWhite');
+  const bCard = document.getElementById('manualClockBlack');
+  if (!wEl) return;
+  wEl.textContent = fmtTime(times.w);
+  bEl.textContent = fmtTime(times.b);
+  // Active highlight
+  wCard.classList.toggle('active', active === 'w');
+  bCard.classList.toggle('active', active === 'b');
+  // Low-time warning (under 30s)
+  wCard.classList.toggle('low', times.w <= 30 && times.w > 0 && active === 'w');
+  bCard.classList.toggle('low', times.b <= 30 && times.b > 0 && active === 'b');
+}
+
+function manualClockRenderFlagged(color) {
+  const card = color === 'w'
+    ? document.getElementById('manualClockWhite')
+    : document.getElementById('manualClockBlack');
+  if (card) { card.classList.add('flagged'); card.classList.remove('active', 'low'); }
+}
+
+function manualClockOnMove(color) {
+  // Called after a move is committed; color = color that just moved
+  if (!manualClockEnabled || !manualClock) return;
+  const over = gameOverMessage(manualChess);
+  if (over) { manualClock.pause(); return; }
+  const nextTurn = color === 'w' ? 'b' : 'w';
+  if (manualClock.active === null) {
+    // First move — start opponent clock
+    manualClock.start(nextTurn);
+  } else {
+    manualClock.switch(nextTurn);
+  }
+}
+
+function manualClockOnGameOver() {
+  if (manualClock) manualClock.pause();
+}
+
+// ═══════════════════════════════════════════════
+//  VS COMPUTER CLOCK
+// ═══════════════════════════════════════════════
+let compClockTC = 180;
+let compClock = null;
+let compClockEnabled = false;
+
+function compSetTC(secs) {
+  compClockTC = secs;
+  compClockEnabled = secs > 0;
+  const btns = document.querySelectorAll('#compTcRow .tc-btn');
+  const labels = [0, 180, 300, 600, 1800];
+  btns.forEach((b, i) => b.classList.toggle('sel', labels[i] === secs));
+}
+
+function compInitClock() {
+  const wrap = document.getElementById('compClockWrap');
+  if (!compClockEnabled) {
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+  if (wrap) wrap.style.display = 'flex';
+  // Update labels to match player color
+  const playerIsWhite = compPlayerColor === 'w';
+  document.getElementById('compClockBotLabel').textContent =
+    document.getElementById('compBotName').textContent.replace(/\(.*\)/, '').trim();
+  document.getElementById('compClockTopLabel').textContent =
+    document.getElementById('compTopName').textContent.replace(/\(.*\)/, '').trim();
+
+  compClock = createClock(compClockTC,
+    (times, active) => compRenderClocks(times, active),
+    (flaggedColor) => {
+      // Determine whose color flagged
+      const flaggedPlayer = flaggedColor === compPlayerColor ? 'You lost' : 'Computer lost';
+      const winner = flaggedColor === compPlayerColor ? 'Computer wins' : 'You win';
+      const el = document.getElementById('compStatus');
+      el.textContent = `⏱ Time — ${winner} on time!`;
+      el.className = 'game-status game-over';
+      compClockRenderFlagged(flaggedColor);
+      compEngineThinking = false; // prevent further engine moves
+    }
+  );
+  compRenderClocks({ w: compClockTC, b: compClockTC }, null);
+}
+
+function compRenderClocks(times, active) {
+  // top = computer, bot = player
+  // map white/black to top/bot based on compPlayerColor
+  const playerColor = compPlayerColor;
+  const compColor = playerColor === 'w' ? 'b' : 'w';
+
+  const botEl = document.getElementById('compTimeBot');
+  const topEl = document.getElementById('compTimeTop');
+  const botCard = document.getElementById('compClockBot');
+  const topCard = document.getElementById('compClockTop');
+  if (!botEl) return;
+
+  botEl.textContent = fmtTime(times[playerColor]);
+  topEl.textContent = fmtTime(times[compColor]);
+
+  botCard.classList.toggle('active', active === playerColor);
+  topCard.classList.toggle('active', active === compColor);
+  botCard.classList.toggle('low', times[playerColor] <= 30 && times[playerColor] > 0 && active === playerColor);
+  topCard.classList.toggle('low', times[compColor] <= 30 && times[compColor] > 0 && active === compColor);
+}
+
+function compClockRenderFlagged(color) {
+  const playerColor = compPlayerColor;
+  const isPlayer = color === playerColor;
+  const card = isPlayer
+    ? document.getElementById('compClockBot')
+    : document.getElementById('compClockTop');
+  if (card) { card.classList.add('flagged'); card.classList.remove('active','low'); }
+}
+
+function compClockOnPlayerMove() {
+  if (!compClockEnabled || !compClock) return;
+  if (compClock.flagged) return;
+  const compColor = compPlayerColor === 'w' ? 'b' : 'w';
+  if (compClock.active === null) {
+    compClock.start(compColor); // computer's turn now
+  } else {
+    compClock.switch(compColor);
+  }
+}
+
+function compClockOnEngineMove() {
+  if (!compClockEnabled || !compClock) return;
+  if (compClock.flagged) return;
+  const over = gameOverMessage(compChess);
+  if (over) { compClock.pause(); return; }
+  if (compClock.active === null) {
+    compClock.start(compPlayerColor);
+  } else {
+    compClock.switch(compPlayerColor);
+  }
+}
+
+function compClockOnGameOver() {
+  if (compClock) compClock.pause();
+}
+
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
 window.addEventListener('load', () => {
   buildSelector();
   loadGame(0);
+  // Set default TC for manual mode clock wrap visibility
+  const mWrap = document.getElementById('manualClockWrap');
+  if (mWrap) mWrap.style.display = 'flex'; // default 3min is on
+  manualClockEnabled = true;
+  // Init clock will be created when mode is first opened
 });
 
 window.addEventListener('resize', () => { updateEvalChart(); });
