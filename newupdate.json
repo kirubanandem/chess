@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "version": "1.0.7",
-  "apk_url": "https://github.com/kirubanandem/chess/raw/refs/heads/main/ChessAnalyzer-V-1.0.7.apk",
+  "versionCode": 8,
+  "version": "1.0.8",
+  "apk_url": "https://github.com/kirubanandem/chess/raw/refs/heads/main/ChessAnalyzer-V-1.0.8.apk",
   "release_notes": "Improved multiplayer, real-time chat, and bug fixes.",
   "required": false
 }
